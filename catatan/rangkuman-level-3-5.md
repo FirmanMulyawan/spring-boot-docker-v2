@@ -11,9 +11,10 @@ Pada tahap ini, fokus utamanya adalah membuat endpoint API (Application Programm
 ## 4. PostgreSQL + Spring Data JPA
 Setelah bisa membuat REST API, langkah krusial berikutnya adalah menyimpan data ke dalam *database* sungguhan agar data tidak hilang (persistent) ketika server dimatikan.
 - **PostgreSQL**: Sistem manajemen database relasional (RDBMS) yang digunakan untuk menyimpan data dalam bentuk tabel.
-- **Spring Data JPA & Hibernate**: Alat bantu di Spring Boot berkonsep ORM (*Object Relational Mapping*). Ini memungkinkan developer berinteraksi dengan database cukup melalui kode Java, tanpa harus banyak menulis sintaks SQL murni secara manual.
-- **Entity**: Membuat representasi tabel database ke dalam bentuk Class Java (menggunakan anotasi `@Entity`).
-- **Repository**: Antarmuka (*interface*) Spring Data JPA yang secara otomatis menyediakan fungsi CRUD bawaan (seperti `save()`, `findAll()`, `findById()`, dan `deleteById()`).
+- **Spring Data JPA & Hibernate**: Konsep ORM (*Object Relational Mapping*) yang memungkinkan developer berinteraksi dengan database cukup melalui kode Java, tanpa harus banyak menulis SQL murni secara manual.
+
+> 📄 **Catatan lengkap tentang Spring Data JPA dipisahkan ke file tersendiri:**
+> **[spring-data-jpa.md](spring-data-jpa.md)** — mencakup `@Entity`, `JpaRepository`, Query Methods, `@Query` JPQL, konfigurasi `application.properties`, dan contoh penggunaan di Service layer.
 
 ## 5. Buat 1 Project CRUD & Struktur Arsitektur
 Tahap ini adalah menggabungkan ilmu REST API dan Database ke dalam satu proyek utuh (Create, Read, Update, Delete). Di tahap ini sangat disarankan untuk mulai mengorganisasi kode ke dalam folder (package) berdasarkan tanggung jawabnya masing-masing.

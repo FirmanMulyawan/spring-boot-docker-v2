@@ -422,27 +422,35 @@ Namespace
 ## Urutan Belajar Praktis (Level)
 
 **Level 1 — Spring Boot dasar**
+
 > Buat project → jalankan → pahami struktur folder → Controller → Service.
 
 **Level 2 — REST API**
+
 > GET → POST → PUT → DELETE.
 
 **Level 3 — Database**
+
 > PostgreSQL → JPA → Entity → Repository → CRUD.
 
 **Level 4 — Project**
+
 > Buat project backend sederhana sampai selesai.
 
 **Level 5 — Docker**
+
 > Dockerfile → build image → container Spring Boot.
 
 **Level 6 — Docker Compose**
+
 > Spring Boot + PostgreSQL dalam satu Compose.
 
 **Level 7 — Advanced**
+
 > Redis → Kafka → Nginx.
 
 **Level 8 — Deployment**
+
 > CI/CD → Kubernetes.
 
 Target terdekat sekarang bukan Kubernetes dulu. Selesaikan **1 aplikasi Spring Boot + PostgreSQL**, lalu aplikasi yang sama masukkan ke Docker. Itu akan membuat hubungan antara Spring Boot dan Docker jauh lebih mudah dipahami.

@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: belajar_db
+    ports:
+      # Port kiri (5433) bisa diakses dari laptopmu, port kanan (5432) di dalam docker
+      - "5433:5432"
+    volumes:
+      # Menyimpan data tabel ke volume agar tidak hilang saat container mati
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  app:
+    # Build image langsung dari Dockerfile yang ada di folder ini (titik .)
+    build: .
+    container_name: spring_app
+    ports:
+      - "8081:8081"
+    environment:
+      # Mengirim environment variable ke aplikasi Spring Boot
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=belajar_db
+      - DB_USER=postgres
+      - DB_PASS=postgres
+    depends_on:
+      # Pastikan database jalan duluan sebelum aplikasi Spring Boot menyala
+      - postgres
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  # Deklarasi nama volume yang digunakan di container postgres
+  postgres_data:
