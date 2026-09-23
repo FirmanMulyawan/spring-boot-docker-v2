@@ -4,7 +4,10 @@ import com.example.belajar_spring_docker_v2.dto.UserRequestDTO;
 import com.example.belajar_spring_docker_v2.dto.UserResponseDTO;
 import com.example.belajar_spring_docker_v2.entity.User;
 import com.example.belajar_spring_docker_v2.repository.UserRepository;
+
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,17 +22,19 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+    @Cacheable("users")
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(UserResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     public UserResponseDTO createUser(UserRequestDTO requestDTO) {
         User user = new User();
         user.setName(requestDTO.name());
         user.setEmail(requestDTO.email());
-        
+
         User savedUser = userRepository.save(user);
         return UserResponseDTO.fromEntity(savedUser);
     }
@@ -39,6 +44,7 @@ public class UserService {
                 .map(UserResponseDTO::fromEntity);
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     public Optional<UserResponseDTO> updateUser(Long id, UserRequestDTO requestDTO) {
         Optional<User> existingUserOpt = userRepository.findById(id);
         if (existingUserOpt.isEmpty()) {
@@ -53,6 +59,7 @@ public class UserService {
         return Optional.of(UserResponseDTO.fromEntity(updatedUser));
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     public boolean deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
             return false;
