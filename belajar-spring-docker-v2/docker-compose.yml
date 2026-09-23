@@ -16,6 +16,25 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app_network
+    # Health check: Docker akan cek apakah PostgreSQL sudah benar-benar siap menerima koneksi
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d belajar_db" ]
+      interval: 5s # cek setiap 5 detik
+      timeout: 5s # timeout tiap pengecekan
+      retries: 5 # coba maksimal 5 kali sebelum dianggap gagal
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+    networks:
+      - app_network
+    # healthcheck:
+    #   test: ["CMD-SHELL", "redis-cli ping"]
+    #   interval: 5s
+    #   timeout: 5s
+    #   retries: 5
 
   app:
     # Build image langsung dari Dockerfile yang ada di folder ini (titik .)
@@ -31,8 +50,9 @@ services:
       - DB_USER=postgres
       - DB_PASS=postgres
     depends_on:
-      # Pastikan database jalan duluan sebelum aplikasi Spring Boot menyala
-      - postgres
+      postgres:
+        # Spring Boot HANYA akan start setelah postgres dinyatakan "healthy"
+        condition: service_healthy
     networks:
       - app_network
 
