@@ -39,9 +39,8 @@ services:
   app:
     # Build image langsung dari Dockerfile yang ada di folder ini (titik .)
     build: .
-    container_name: spring_app
-    ports:
-      - "8081:8081"
+    # container_name: spring_app (dihapus agar bisa di-scale menjadi multiple instance)
+    # ports: (port 8081 tidak perlu di-bind ke host laptop agar tidak bentrok saat di-scale)
     environment:
       # Mengirim environment variable ke aplikasi Spring Boot
       - DB_HOST=postgres
