@@ -8,6 +8,35 @@ Dalam arsitektur backend modern, aplikasi Java/Spring Boot **hampir tidak pernah
 
 ---
 
+## 🍼 Nginx dalam "Bahasa Bayi" (Analogi Satpam Restoran)
+
+Bayangkan aplikasi backend kamu adalah sebuah **Restoran Fast Food**:
+
+* **Koki Dapur (Spring Boot / Port 8081):**
+  * Koki tugasnya fokus memasak logika & data (CRUD).
+  * Koki berada di ruang dalam (dapur). Dia **tidak ramah** kalau diajak ngobrol langsung oleh pembeli dari luar, dan dia tidak mengerti cara menjaga keamanan pintu depan.
+
+* **Satpam & Pelayan Depan Pintu (Nginx / Port 80):**
+  * Nginx adalah Satpam ganteng yang berdiri tegak di pintu depan restoran.
+  * **Siapa saja yang datang dari luar internet (HP/Browser) HANYA BISA bicara dengan Nginx di pintu depan (Port 80).**
+
+### Apa Saja Tugas Satpam Nginx Ini?
+
+1. **Reverse Proxy (Perantara Pesanan):**
+   * Pembeli: *"Mas Nginx, saya minta daftar user dong!"*
+   * Nginx: *"Oke tunggu sebentar."* *(Nginx lari ke dapur Spring Boot di port 8081, ambil datanya, lalu kasih balik ke Pembeli)*.
+   * **Hasilnya:** Pembeli tidak pernah tahu dapur Koki ada di mana atau pakai port berapa!
+
+2. **Load Balancer (Bagi-bagi Tugas):**
+   * Kalau restoran sangat ramai, kita tambah 3 Koki (3 Container Spring Boot: `app1`, `app2`, `app3`).
+   * Nginx bakal bagi antrean: Pesanan ke-1 dikasih ke Koki 1, pesanan ke-2 ke Koki 2, pesanan ke-3 ke Koki 3. Supaya tidak ada Koki yang pingsan karena keberatan beban.
+
+3. **Keamanan (Security & SSL):**
+   * Kalau ada penjahat mau merusak restoran, Nginx mencegatnya di pintu depan.
+   * Nginx juga yang memasang stempel aman HTTPS (SSL certificate) sebelum surat pesanan masuk ke Dapur.
+
+---
+
 ## 2. Mengapa Perlu Nginx di Depan Spring Boot?
 
 Secara default, Spring Boot memiliki embedded server bernama **Tomcat** (port default `8080` atau `8081`). 
