@@ -47,6 +47,53 @@ Untuk Spring Boot, kita gunakan **SpringDoc OpenAPI**:
 
 ---
 
+## Korelasi Versi SpringDoc ↔ Spring Boot
+
+| Spring Boot | SpringDoc OpenAPI | Keterangan |
+|---|---|---|
+| **2.x** | `springdoc-openapi-ui` **1.x** | Artifact ID berbeda! |
+| **3.x** | `springdoc-openapi-starter-webmvc-ui` **2.x** | Wajib pakai versi 2 |
+| **4.x** | `springdoc-openapi-starter-webmvc-ui` **2.7+** | Yang kita pakai (2.8.9) |
+
+### Kenapa berbeda?
+
+Spring Boot 3.x ke atas migrasi ke **Jakarta EE**:
+
+```text
+Spring Boot 2.x → pakai javax.servlet.*
+Spring Boot 3.x → pakai jakarta.servlet.* (beda package!)
+Spring Boot 4.x → lanjutan dari 3.x
+```
+
+SpringDoc 2.x dibuat ulang untuk mendukung perubahan besar ini.
+
+### Cara cek versi yang tepat
+
+Lihat Spring Boot kamu di `pom.xml`:
+```xml
+<parent>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.1</version>  ← Spring Boot 4.x
+</parent>
+```
+
+Karena Spring Boot **4.1.1** → pakai SpringDoc **2.8.9** ✅
+
+### Tanda kamu salah pilih versi
+
+```text
+❌ Pakai springdoc 1.x di Spring Boot 3/4
+   → Error: ClassNotFoundException javax.servlet...
+
+❌ Pakai artifact lama "springdoc-openapi-ui" di Spring Boot 3/4
+   → Error tidak kompatibel
+
+✅ Pakai springdoc-openapi-starter-webmvc-ui 2.8.9 di Spring Boot 4.x
+   → Kompatibel ✅
+```
+
+---
+
 ## Konfigurasi Dasar di application.yaml
 
 ```yaml
