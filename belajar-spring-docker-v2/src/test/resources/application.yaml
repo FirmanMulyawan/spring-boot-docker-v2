@@ -1,0 +1,26 @@
+# Konfigurasi khusus untuk environment test
+# File ini menggantikan application.yaml saat test dijalankan
+
+spring:
+  # Disable Redis caching saat test - tidak perlu koneksi Redis
+  cache:
+    type: none
+
+  # Nonaktifkan auto-config Redis agar tidak error karena Redis tidak jalan
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+  # Datasource dummy untuk test - tidak perlu database beneran
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
