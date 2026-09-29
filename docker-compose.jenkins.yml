@@ -1,0 +1,29 @@
+﻿# docker-compose.jenkins.yml
+# Jalankan Jenkins di Docker agar tidak perlu install Jenkins manual
+#
+# Cara pakai:
+#   docker compose -f docker-compose.jenkins.yml up -d
+#
+# Lalu buka: http://localhost:8080
+
+version: '3.8'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk21
+    container_name: jenkins
+    restart: unless-stopped
+    ports:
+      - "8080:8080"     # Jenkins UI
+      - "50000:50000"   # Jenkins agent port
+    volumes:
+      # Simpan data Jenkins agar tidak hilang saat container restart
+      - jenkins_home:/var/jenkins_home
+      # Mount Docker socket agar Jenkins bisa jalankan perintah docker
+      # (Docker-in-Docker pattern sederhana)
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+
+volumes:
+  jenkins_home:

@@ -1,20 +1,65 @@
 ﻿name: CI/CD Pipeline
 
-# Pipeline ini jalan saat ada push atau pull_request ke branch main
+# Pipeline ini hanya jalan saat push ke branch main
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+
+# ============================================================
+# CARA KERJA TRIGGER [deploy]:
+#
+# Pipeline ini akan SKIP semua job jika commit message
+# TIDAK mengandung kata "[deploy]".
+#
+# Contoh commit yang TIDAK trigger CI/CD:
+#   git commit -m "update readme"
+#   git commit -m "perbaiki bug login"
+#
+# Contoh commit yang TRIGGER CI/CD:
+#   git commit -m "[deploy] release fitur user v1.2"
+#   git commit -m "fix bug [deploy]"
+# ============================================================
 
 jobs:
 
   # =============================================
-  # JOB 1: Jalankan semua unit test
+  # JOB 1: Cek apakah commit message mengandung [deploy]
+  # Job ini selalu jalan, tapi job lain hanya jalan
+  # kalau job ini output-nya "true"
+  # =============================================
+  check-deploy-keyword:
+    name: Check [deploy] Keyword
+    runs-on: ubuntu-latest
+    # Output dari job ini bisa dibaca oleh job lain
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+
+    steps:
+      - name: Check commit message for [deploy]
+        id: check
+        run: |
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          echo "Commit message: $COMMIT_MSG"
+
+          if echo "$COMMIT_MSG" | grep -q "\[deploy\]"; then
+            echo "✅ Keyword [deploy] ditemukan → CI/CD akan jalan"
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "⏭️  Keyword [deploy] TIDAK ada → CI/CD di-skip"
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+  # =============================================
+  # JOB 2: Jalankan semua unit test
+  # Hanya jalan jika check-deploy-keyword = true
   # =============================================
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    needs: check-deploy-keyword
+
+    # Kondisi: hanya jalan kalau should_deploy = true
+    if: needs.check-deploy-keyword.outputs.should_deploy == 'true'
 
     steps:
       # Langkah 1: Ambil kode dari GitHub
@@ -29,7 +74,6 @@ jobs:
           distribution: 'temurin'
 
       # Langkah 3: Cache dependency Maven agar pipeline lebih cepat
-      # Tanpa cache, Maven download ulang semua dependency tiap pipeline jalan
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
@@ -44,17 +88,13 @@ jobs:
         run: ./mvnw test
 
   # =============================================
-  # JOB 2: Build JAR, lalu build & push Docker Image
-  # Hanya jalan jika:
-  #   - Job "test" LULUS
-  #   - Event adalah "push" ke branch main (bukan pull_request)
+  # JOB 3: Build JAR, lalu build & push Docker Image
+  # Hanya jalan setelah job test LULUS
   # =============================================
   build-and-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    needs: test  # Tunggu job test selesai dan lulus dulu
-
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
 
     steps:
       # Langkah 1: Ambil kode dari GitHub
@@ -68,7 +108,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      # Langkah 3: Cache Maven (sama seperti job test)
+      # Langkah 3: Cache Maven
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
@@ -78,22 +118,21 @@ jobs:
             ${{ runner.os }}-m2-
 
       # Langkah 4: Build JAR (skip test karena sudah lulus di job sebelumnya)
-      # Dockerfile butuh file JAR di folder target/ untuk di-COPY
       - name: Build JAR
         working-directory: ./belajar-spring-docker-v2
         run: ./mvnw package -DskipTests
 
-      # Langkah 5: Login ke Docker Hub pakai Secrets (aman, tidak hardcode password)
+      # Langkah 5: Login ke Docker Hub pakai Secrets
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Langkah 6: Build Docker image dari Dockerfile dan push ke Docker Hub
+      # Langkah 6: Build Docker image dan push ke Docker Hub
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./belajar-spring-docker-v2  # Lokasi Dockerfile
+          context: ./belajar-spring-docker-v2
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/belajar-spring-docker:latest

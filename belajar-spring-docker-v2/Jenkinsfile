@@ -1,0 +1,113 @@
+﻿pipeline {
+    // Jalankan di agent manapun yang tersedia
+    agent any
+
+    // Variabel yang dipakai di seluruh pipeline
+    environment {
+        // Ambil credentials Docker Hub yang sudah disimpan di Jenkins
+        // ID 'dockerhub-credentials' didaftarkan di: Jenkins → Manage Jenkins → Credentials
+        DOCKER_CREDENTIALS = credentials('dockerhub-credentials')
+        DOCKER_USERNAME    = "${DOCKER_CREDENTIALS_USR}"
+        DOCKER_PASSWORD    = "${DOCKER_CREDENTIALS_PSW}"
+        IMAGE_NAME         = "${DOCKER_USERNAME}/belajar-spring-docker"
+        IMAGE_TAG          = "latest"
+    }
+
+    // Tools yang dipakai (harus sudah dikonfigurasi di Jenkins → Global Tool Configuration)
+    tools {
+        jdk 'JDK-21'
+        maven 'Maven-3'
+    }
+
+    stages {
+
+        // =============================================
+        // STAGE 1: Ambil kode dari repository
+        // =============================================
+        stage('Checkout') {
+            steps {
+                echo '📥 Mengambil kode dari repository...'
+                checkout scm
+            }
+        }
+
+        // =============================================
+        // STAGE 2: Jalankan semua unit test
+        // Menggunakan H2 in-memory, tidak perlu PostgreSQL nyala
+        // =============================================
+        stage('Test') {
+            steps {
+                echo '🧪 Menjalankan unit test...'
+                dir('belajar-spring-docker-v2') {
+                    sh './mvnw test'
+                }
+            }
+            // Simpan laporan hasil test agar tampil di Jenkins UI
+            post {
+                always {
+                    junit 'belajar-spring-docker-v2/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        // =============================================
+        // STAGE 3: Build JAR
+        // Skip test karena sudah lulus di stage sebelumnya
+        // =============================================
+        stage('Build JAR') {
+            steps {
+                echo '🔨 Build JAR...'
+                dir('belajar-spring-docker-v2') {
+                    sh './mvnw package -DskipTests'
+                }
+            }
+        }
+
+        // =============================================
+        // STAGE 4: Build Docker Image
+        // =============================================
+        stage('Build Docker Image') {
+            steps {
+                echo '🐳 Build Docker image...'
+                dir('belajar-spring-docker-v2') {
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        // =============================================
+        // STAGE 5: Push ke Docker Hub
+        // Hanya jalan jika branch = main
+        // =============================================
+        stage('Push to Docker Hub') {
+            when {
+                branch 'main'
+            }
+            steps {
+                echo '📤 Push image ke Docker Hub...'
+                sh """
+                    echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
+                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                    docker logout
+                """
+            }
+        }
+
+    }
+
+    // =============================================
+    // Notifikasi setelah pipeline selesai
+    // =============================================
+    post {
+        success {
+            echo '✅ Pipeline BERHASIL! Image sudah di Docker Hub.'
+        }
+        failure {
+            echo '❌ Pipeline GAGAL! Cek log di atas untuk detail error.'
+        }
+        always {
+            // Bersihkan image Docker lokal agar disk tidak penuh
+            sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
+        }
+    }
+}
